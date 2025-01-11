@@ -160,8 +160,8 @@ class ListModel(qtc.QAbstractListModel):
         yield from self.__items
 
 
-class ListTableModel(qtc.QAbstractItemModel):
-    """List on Table Model."""
+class ListTreeModel(qtc.QAbstractItemModel):
+    """List on Tree Model with columns."""
 
     HEADERS_NAME: tuple[str] = ("Name",)
 
@@ -326,7 +326,7 @@ class ListTableModel(qtc.QAbstractItemModel):
 
 
 class TreeModel(qtc.QAbstractItemModel):
-    """List Model with columns."""
+    """Tree Model."""
 
     HEADERS_NAME: tuple[str] = ("Name",)
 
