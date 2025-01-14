@@ -50,4 +50,6 @@ class TreeView(qtw.QTreeView, View):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.setAlternatingRowColors(True)
         self.setUniformRowHeights(True)
