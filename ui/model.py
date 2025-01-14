@@ -164,6 +164,247 @@ class ListModel(qtc.QAbstractListModel):
         yield from self.__items
 
 
+class TableModel(qtc.QAbstractTableModel):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__items = []
+        self.COL_COUNT = 1
+
+    def insert_item(self, item: Item, pos: int = -1):
+        pos = _get_abs_pos(pos, self.rowCount())
+        column = self.rowCount() % self.columnCount()
+
+        if column == 0:
+            self.insertRow(self.rowCount() - 1, item=item)
+        else:
+            self.__items.insert(pos, item)
+            self.dataChanged.emit(self.rowCount(), column)
+
+    def insert_items(self, items: list[Item], pos: int = -1):
+        pos = _get_abs_pos(pos, self.rowCount())
+
+        column = self.rowCount() % self.columnCount()
+        if column:
+            for i in range(self.columnCount() - column):
+                self.__items.insert(pos + i, items.pop(0))
+                self.dataChanged.emit(self.rowCount(), column)
+                pos += 1
+
+        if items:
+            row = math.floor(pos / self.columnCount())
+            row_count = (
+                math.ceil(
+                    (len(items) + self.rowCount()) / self.columnCount(),
+                )
+                - self.rowCount()
+            )
+            self.insertRows(row, row_count, items=items)
+
+    def clear(self):
+        self.beginResetModel()
+        del self.__items[:]
+        self.endResetModel()
+
+    def index(
+        self, row: int = 0, column: int = 0, parent: qtc.QModelIndex | None = None
+    ) -> qtc.QModelIndex:
+        pos = self.columnCount() * row + column
+
+        if (
+            0 <= row < self.rowCount()
+            and 0 <= column < self.columnCount()
+            and pos < self.rowCount()
+        ):
+            return self.createIndex(row, column, self.__items[pos])
+
+        return qtc.QModelIndex()
+
+    def iter_indices(self) -> Iterator[qtc.QModelIndex]:
+        row = -1
+        column = 0
+        for i in range(self.rowCount()):
+            if i % self.columnCount() == 0:
+                row += 1
+                column = 0
+            else:
+                column += 1
+
+            index = self.index(row, column)
+
+            if index.isValid():
+                yield index
+
+    def rowCount(self, parent: qtc.QModelIndex | None = None) -> int:
+        return math.ceil(len(self.__items) / self.columnCount())
+
+    def columnCount(self, parent: qtc.QModelIndex | None = None) -> int:
+        return self.COL_COUNT
+
+    def insertRow(
+        self,
+        row: int,
+        parent: qtc.QModelIndex | None = None,
+        item: Item | None = None,
+    ) -> bool:
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        if not 0 <= row <= self.rowCount():
+            return False
+
+        self.beginInsertRows(parent, row, row)
+
+        if item:
+            pos = row * self.columnCount()
+            self.__items.insert(pos, item)
+
+        self.endInsertRows()
+        return True
+
+    def insertRows(
+            self,
+            row: int,
+            count: int,
+            parent: qtc.QModelIndex | None = None,
+            items: list[Item] | None = None,
+    ) -> bool:
+        end_row = row + count - 1
+
+        if not 0 <= row < end_row <= self.rowCount():
+            return False
+
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        self.beginInsertRows(parent, row, end_row)
+
+        if items:
+            pos = row * self.columnCount()
+
+            for i in range(len(items)):
+                self.__items.insert(pos + i, items[i])
+
+        self.endInsertRows()
+        return True
+
+    def insertColumn(
+            self,
+            column: int,
+            parent: qtc.QModelIndex | None = None,
+            item: Item | None = None,
+    ) -> bool:
+        if not 0 <= column <= self.columnCount():
+            return False
+
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        self.beginInsertColumns(parent, column, column)
+
+        # TODO(amallaroni): use node data
+        row_count = abs(
+            math.ceil(self.rowCount() / self.columnCount()) - self.rowCount(),
+        )
+
+        if row_count:
+            self.removeRows(self.rowCount(), row_count, parent)
+
+        self.endInsertColumns()
+        return True
+
+    def insertColumns(
+            self,
+            column: int,
+            count: int,
+            parent: qtc.QModelIndex | None = None,
+            items: list[Item] | None = None,
+    ) -> bool:
+        end_col = column + count - 1
+
+        if not 0 <= column < end_col <= self.columnCount():
+            return False
+
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        self.beginInsertColumns(parent, column, end_col)
+
+        # TODO(amallaroni): use node data
+        row_count = abs(
+            math.ceil(self.rowCount() / self.columnCount()) - self.rowCount(),
+        )
+
+        if row_count:
+            self.removeRows(self.rowCount(), row_count, parent)
+
+        self.endInsertColumns()
+        return True
+
+    def removeRow(self, row: int, parent: qtc.QModelIndex | None = None) -> bool:
+        if not 0 < row < self.rowCount():
+            return False
+
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        self.beginRemoveRows(parent, row, row)
+
+        pos = row * self.columnCount()
+        end_pos = min(pos + self.columnCount(), self.rowCount())
+        del self.__items[pos:end_pos]
+
+        self.endRemoveRows()
+        return True
+
+    def removeRows(
+            self, row: int, count: int, parent: qtc.QModelIndex | None = None
+    ) -> bool:
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        end_row = row + count - 1
+
+        if not 0 <= row < end_row <= self.rowCount():
+            return False
+
+        self.beginRemoveRows(parent, row, end_row)
+
+        pos = row * self.columnCount()
+        end_pos = min(pos + (count * self.columnCount()), self.rowCount())
+        del self.__items[pos:end_pos]
+
+        self.endRemoveRows()
+        return True
+
+    def removeColumn(self, column: int, parent: qtc.QModelIndex | None = None) -> bool:
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        return self.removeColumns(column, 1, parent)
+
+    def removeColumns(
+            self, column: int, count: int, parent: qtc.QModelIndex | None = None
+    ) -> bool:
+        end_col = column + count - 1
+
+        if not 0 < column < end_col < self.columnCount():
+            return False
+
+        if parent is None:
+            parent = qtc.QModelIndex()
+
+        self.beginRemoveColumns(parent, column, end_col)
+
+        row_count = math.ceil(self.rowCount() / self.columnCount()) - self.rowCount()
+
+        if row_count:
+            self.insertRows(self.rowCount(), row_count, parent)
+
+        self.endRemoveColumns()
+        return True
+
+
 class ListTreeModel(qtc.QAbstractItemModel):
     """List on Tree Model with columns."""
 
