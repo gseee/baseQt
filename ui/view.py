@@ -8,11 +8,8 @@ import Qt.QtWidgets as qtw
 from item import Item
 
 
-class View(qtw.QAbstractItemView):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setSelectionMode(self.ExtendedSelection)
+class AbstractView:
+    """Abstract methods for views."""
 
     def select_index(self, index: qtc.QModelIndex):
         self.scrollTo(index, self.PositionAtCenter)
@@ -42,11 +39,32 @@ class View(qtw.QAbstractItemView):
         return [idx.internalPointer() for idx in self.selected_indices()]
 
 
-class TableView(qtw.QTableView, View):
+class ListView(qtw.QListView, AbstractView):
+    """List View without columns."""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.setAlternatingRowColors(True)
+
+
+class TableView(qtw.QTableView, AbstractView):
     """Table View"""
 
 
-class TreeView(qtw.QTreeView, View):
+class ListTreeView(qtw.QTreeView, AbstractView):
+    """List View with columns."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.setAlternatingRowColors(True)
+        self.setUniformRowHeights(True)
+        self.setRootIsDecorated(False)
+
+
+class TreeView(qtw.QTreeView, AbstractView):
+    """Tree View."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
