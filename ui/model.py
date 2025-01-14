@@ -53,6 +53,8 @@ class ListModel(qtc.QAbstractListModel):
         if 0 <= row <= self.rowCount():
             return self.createIndex(row, column, self.__items[row])
 
+        return qtc.QModelIndex()
+
     def iter_indices(self) -> Iterator[qtc.QModelIndex]:
         for i in range(self.rowCount()):
             index = self.index(i)
