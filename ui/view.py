@@ -1,5 +1,7 @@
 """Custom views ready to use custom items."""
 
+from __future__ import annotations
+
 import Qt.QtCore as qtc
 import Qt.QtWidgets as qtw
 

@@ -1,4 +1,8 @@
 """Custom model ready to use custom items."""
+
+from __future__ import annotations
+
+import math
 from collections.abc import Iterator
 
 import Qt.QtCore as qtc
