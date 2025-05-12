@@ -75,8 +75,10 @@ class ListModel(qtc.QAbstractListModel):
         if not index.isValid():
             return None
 
+        item = index.internalPointer()
+
         if role == self.DataRole:
-            return self.__items[index.column()].data
+            return item.data
 
         return None
 
@@ -944,6 +946,7 @@ class TreeModel(qtc.QAbstractItemModel):
             item = src_item.child(src_row)
             dst_item.insert_child(item, dst_row + i)
         self.endMoveRows()
+        return True
 
 
 def _get_abs_pos(pos: int, len_: int) -> int:
