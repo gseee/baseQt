@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, TypeVar
 
 import math
 
 import Qt.QtCore as qtc
 
-from item import Item, TreeItem
+from .item import Item, TreeItem
+
+T = TypeVar("T", bound=Item)
+TT = TypeVar("TT", bound=TreeItem)
 
 
 class ListModel(qtc.QAbstractListModel):
@@ -18,29 +21,29 @@ class ListModel(qtc.QAbstractListModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__items: list[Item] = []
+        self.__items: list[T] = []
 
-    def insert_item(self, item: Item, pos: int = -1) -> bool:
+    def insert_item(self, item: T, pos: int = -1) -> bool:
         pos = _get_abs_pos(pos, self.rowCount())
         return self.insertRow(pos, item=item)
 
-    def insert_items(self, items: list[Item], pos: int = -1) -> bool:
+    def insert_items(self, items: list[T], pos: int = -1) -> bool:
         pos = _get_abs_pos(pos, self.rowCount())
         return self.insertRows(pos, len(items), items=items)
 
-    def delete_item(self, item: Item) -> bool:
+    def delete_item(self, item: T) -> bool:
         return self.removeRow(self.__items.index(item))
 
-    def delete_items(self, items: list[Item]):
+    def delete_items(self, items: list[T]):
         for item in sorted(items, key=lambda i: self.__items.index(i), reverse=True):
             self.delete_item(item)
 
-    def move_item(self, item: Item, pos: int = -1):
+    def move_item(self, item: T, pos: int = -1):
         item_pos = self.__items.index(item)
         pos = _get_abs_pos(pos, self.rowCount())
         return self.moveRow(item_pos, pos)
 
-    def move_items(self, items: list[Item], pos: int = -1):
+    def move_items(self, items: list[T], pos: int = -1):
         pos = _get_abs_pos(pos, self.rowCount())
         for i, item in enumerate(sorted(items, key=lambda idx: self.__items.index(idx), reverse=True)):
             item_pos = self.__items.index(item)
@@ -95,7 +98,7 @@ class ListModel(qtc.QAbstractListModel):
 
     def insertRows(self, row: int, count: int,
                    parent: qtc.QModelIndex | None = None,
-                   items: list[Item] | None = None,
+                   items: list[T] | None = None,
                    ) -> bool:
 
         if not 0 <= row <= self.rowCount():
@@ -174,7 +177,7 @@ class ListModel(qtc.QAbstractListModel):
         return True
 
     @property
-    def items(self) -> Iterator[Item]:
+    def items(self) -> Iterator[T]:
         yield from self.__items
 
 
@@ -187,7 +190,7 @@ class TableModel(qtc.QAbstractTableModel):
         self.__items = []
         self.COL_COUNT = 1
 
-    def insert_item(self, item: Item, pos: int = -1):
+    def insert_item(self, item: T, pos: int = -1):
         pos = _get_abs_pos(pos, self.rowCount())
         column = self.rowCount() % self.columnCount()
 
@@ -197,7 +200,7 @@ class TableModel(qtc.QAbstractTableModel):
             self.__items.insert(pos, item)
             self.dataChanged.emit(self.rowCount(), column)
 
-    def insert_items(self, items: list[Item], pos: int = -1):
+    def insert_items(self, items: list[T], pos: int = -1):
         pos = _get_abs_pos(pos, self.rowCount())
 
         column = self.rowCount() % self.columnCount()
@@ -294,7 +297,7 @@ class TableModel(qtc.QAbstractTableModel):
             row: int,
             count: int,
             parent: qtc.QModelIndex | None = None,
-            items: list[Item] | None = None,
+            items: list[T] | None = None,
     ) -> bool:
         end_row = row + count - 1
 
@@ -319,7 +322,7 @@ class TableModel(qtc.QAbstractTableModel):
             self,
             column: int,
             parent: qtc.QModelIndex | None = None,
-            item: Item | None = None,
+            item: T | None = None,
     ) -> bool:
         if not 0 <= column <= self.columnCount():
             return False
@@ -345,7 +348,7 @@ class TableModel(qtc.QAbstractTableModel):
             column: int,
             count: int,
             parent: qtc.QModelIndex | None = None,
-            items: list[Item] | None = None,
+            items: list[T] | None = None,
     ) -> bool:
         end_col = column + count - 1
 
@@ -440,30 +443,30 @@ class ListTreeModel(qtc.QAbstractItemModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__items: list[Item] = []
+        self.__items: list[T] = []
         self.COL_COUNT = len(self.HEADERS_NAME)
 
-    def insert_item(self, item: Item, pos: int = -1) -> bool:
+    def insert_item(self, item: T, pos: int = -1) -> bool:
         pos = _get_abs_pos(pos, self.rowCount())
         return self.insertRow(pos, item=item)
 
-    def insert_items(self, items: list[Item], pos: int = -1) -> bool:
+    def insert_items(self, items: list[T], pos: int = -1) -> bool:
         pos = _get_abs_pos(pos, self.rowCount())
         return self.insertRows(pos, len(items), items=items)
 
-    def delete_item(self, item: Item) -> bool:
+    def delete_item(self, item: T) -> bool:
         return self.removeRow(self.__items.index(item))
 
-    def delete_items(self, items: list[Item]):
+    def delete_items(self, items: list[T]):
         for item in sorted(items, key=lambda i: self.__items.index(i), reverse=True):
             self.delete_item(item)
 
-    def move_item(self, item: Item, pos: int = -1):
+    def move_item(self, item: T, pos: int = -1):
         item_pos = self.__items.index(item)
         pos = _get_abs_pos(pos, self.rowCount())
         return self.moveRow(item_pos, pos)
 
-    def move_items(self, items: list[Item], pos: int = -1):
+    def move_items(self, items: list[T], pos: int = -1):
         pos = _get_abs_pos(pos, self.rowCount())
         for i, item in enumerate(sorted(items, key=lambda i: self.__items.index(i), reverse=True)):
             item_pos = self.__items.index(item)
@@ -512,7 +515,7 @@ class ListTreeModel(qtc.QAbstractItemModel):
 
     def insertRow(self, row: int,
                   parent: qtc.QModelIndex | None = None,
-                  item: Item | None = None,
+                  item: T | None = None,
                   ) -> bool:
         if not 0 <= row <= self.rowCount():
             return False
@@ -528,7 +531,7 @@ class ListTreeModel(qtc.QAbstractItemModel):
 
     def insertRows(self, row: int, count: int,
                    parent: qtc.QModelIndex | None = None,
-                   items: list[Item] | None = None,
+                   items: list[T] | None = None,
                    ) -> bool:
         if not 0 <= row <= self.rowCount():
             return False
@@ -606,7 +609,7 @@ class ListTreeModel(qtc.QAbstractItemModel):
         return True
 
     @property
-    def items(self) -> Iterator[Item]:
+    def items(self) -> Iterator[T]:
         yield from self.__items
 
 
@@ -621,8 +624,8 @@ class TreeModel(qtc.QAbstractItemModel):
         self.COL_COUNT = len(self.HEADERS_NAME)
         self.root_item = TreeItem("root")
 
-    def insert_item(self, item: TreeItem,
-                    parent_item: TreeItem | None = None,
+    def insert_item(self, item: TT,
+                    parent_item: TT | None = None,
                     pos: int = -1):
         if parent_item is None:
             parent_item = self.root_item
@@ -638,8 +641,8 @@ class TreeModel(qtc.QAbstractItemModel):
         pos = _get_abs_pos(pos, parent_item.child_count)
         self.insertRow(pos, parent_index, item)
 
-    def insert_items(self, items: list[TreeItem],
-                     parent_item: TreeItem | None = None,
+    def insert_items(self, items: list[TT],
+                     parent_item: TT | None = None,
                      pos: int = -1):
         if parent_item is None:
             parent_item = self.root_item
@@ -655,13 +658,13 @@ class TreeModel(qtc.QAbstractItemModel):
         pos = _get_abs_pos(pos, parent_item.child_count)
         self.insertRows(pos, len(items), parent_index, items)
 
-    def delete_item(self, item: TreeItem):
+    def delete_item(self, item: TT):
         for idx in self.iter_indices(recursive=True):
             if idx.internalPointer() == item:
                 self.removeRow(idx.row(), idx.parent())
                 break
 
-    def delete_items(self, items: list[TreeItem]):
+    def delete_items(self, items: list[TT]):
         idx_to_delete = []
         for idx in self.iter_indices(recursive=True):
             if idx.internalPointer() in items:
@@ -672,8 +675,8 @@ class TreeModel(qtc.QAbstractItemModel):
         for idx in sorted(idx_to_delete, key=lambda i: i.row(), reverse=True):
             self.removeRow(idx.row(), idx.parent())
 
-    def move_item(self, item: TreeItem,
-                  dst_parent_item: TreeItem | None = None,
+    def move_item(self, item: TT,
+                  dst_parent_item: TT | None = None,
                   pos: int = -1):
         item_index = None
         dst_parent_index = None
@@ -696,8 +699,8 @@ class TreeModel(qtc.QAbstractItemModel):
         pos = _get_abs_pos(pos, dst_parent_item.child_count)
         self.moveRow(item_index.row(), pos, index.parent(), dst_parent_index)
 
-    def move_items(self, items: list[TreeItem],
-                   dst_parent_item: TreeItem | None = None,
+    def move_items(self, items: list[TT],
+                   dst_parent_item: TT | None = None,
                    pos: int = -1):
         item_indices = []
         dst_parent_index = None
@@ -751,9 +754,9 @@ class TreeModel(qtc.QAbstractItemModel):
             return qtc.QModelIndex()
 
         child_item = index.internalPointer()
-        parent_item = child_item.parent()
+        parent_item = child_item.parent
 
-        if parent_item == self.root_item:
+        if parent_item == self.root_item or parent_item is None:
             return qtc.QModelIndex()
 
         return self.createIndex(parent_item.row(), 0, parent_item)
@@ -797,7 +800,7 @@ class TreeModel(qtc.QAbstractItemModel):
         return self.COL_COUNT
 
     def insertRow(self, row: int, parent: qtc.QModelIndex | None = None,
-                  item: TreeItem | None = None) -> bool:
+                  item: TT | None = None) -> bool:
         if parent is None:
             parent = qtc.QModelIndex()
 
@@ -817,7 +820,7 @@ class TreeModel(qtc.QAbstractItemModel):
 
     def insertRows(self, row: int, count: int,
                    parent: qtc.QModelIndex | None = None,
-                   items: list[TreeItem] | None = None) -> bool:
+                   items: list[TT] | None = None) -> bool:
         if parent is None:
             parent = qtc.QModelIndex()
 

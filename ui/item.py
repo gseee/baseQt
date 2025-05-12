@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from typing import Any, TypeVar, Generic
 
 T = TypeVar("T")
+TT = TypeVar("TT")
 
 class Item(Generic[T]):
     """Base item used in view."""
@@ -13,14 +14,13 @@ class Item(Generic[T]):
         self.name = name
         self.data = data
 
-TT = TypeVar("TT", bound=Item)
-
 class TreeItem(Generic[TT]):
     """Base item used in TreeView."""
 
     def __init__(self, name: str, data: Any | None = None,
                  parent: TT | None = None):
-        super().__init__(name, data)
+        self.name = name
+        self.data = data
         self.__parent = parent
         self.__children = []
 

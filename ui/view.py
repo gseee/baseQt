@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+from typing import TypeVar
+
 import Qt.QtCore as qtc
 import Qt.QtWidgets as qtw
 
-from item import Item
+from .item import Item
+from ui.item import TreeItem
+
+T = TypeVar("T", bound=Item)
+TT = TypeVar("TT", bound=TreeItem)
 
 
 class AbstractView:
     """Abstract methods for views."""
 
     def select_index(self, index: qtc.QModelIndex):
-        self.scrollTo(index, self.PositionAtCenter)
+        self.scrollTo(index, self.ScrollHint.PositionAtCenter)
         self.selectionModel().select(
             index, qtc.QItemSelectionModel.Select | qtc.QItemSelectionModel.Rows)
 
@@ -32,10 +38,10 @@ class AbstractView:
     def selected_indices(self) -> list[qtc.QModelIndex]:
         return self.selectionModel().selectedRows()
 
-    def selected_item(self) -> Item:
+    def selected_item(self) -> T:
         return self.selected_index().internalPointer()
 
-    def selected_items(self) -> list[Item]:
+    def selected_items(self) -> list[T]:
         return [idx.internalPointer() for idx in self.selected_indices()]
 
 
@@ -71,3 +77,10 @@ class TreeView(qtw.QTreeView, AbstractView):
         self.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
         self.setAlternatingRowColors(True)
         self.setUniformRowHeights(True)
+
+    def selected_item(self) -> TT:
+        return super().selected_item()
+
+    def selected_items(self) -> list[TT]:
+        return super().selected_items()
+
