@@ -626,13 +626,14 @@ class TreeModel(qtc.QAbstractItemModel):
                     pos: int = -1):
         if parent_item is None:
             parent_item = self.root_item
-
-        for index in self.iter_indices(recursive=True):
-            if index.internalPointer() == parent_item:
-                parent_index = index
-                break
+            parent_index = None
         else:
-            raise ValueError(f"No parent index found from {parent_item.name!r}.")
+            for index in self.iter_indices(recursive=True):
+                if index.internalPointer() == parent_item:
+                    parent_index = index
+                    break
+            else:
+                raise ValueError(f"No parent index found from {parent_item.name!r}.")
 
         pos = _get_abs_pos(pos, parent_item.child_count)
         self.insertRow(pos, parent_index, item)
@@ -642,13 +643,14 @@ class TreeModel(qtc.QAbstractItemModel):
                      pos: int = -1):
         if parent_item is None:
             parent_item = self.root_item
-
-        for index in self.iter_indices(recursive=True):
-            if index.internalPointer() == parent_item:
-                parent_index = index
-                break
+            parent_index = None
         else:
-            raise ValueError(f"No parent index found from {parent_item.name!r}.")
+            for index in self.iter_indices(recursive=True):
+                if index.internalPointer() == parent_item:
+                    parent_index = index
+                    break
+            else:
+                raise ValueError(f"No parent index found from {parent_item.name!r}.")
 
         pos = _get_abs_pos(pos, parent_item.child_count)
         self.insertRows(pos, len(items), parent_index, items)
