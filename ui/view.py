@@ -7,8 +7,7 @@ from typing import TypeVar
 import Qt.QtCore as qtc
 import Qt.QtWidgets as qtw
 
-from .item import Item
-from ui.item import TreeItem
+from .item import Item, TreeItem
 
 T = TypeVar("T", bound=Item)
 TT = TypeVar("TT", bound=TreeItem)
