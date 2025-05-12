@@ -1,2 +1,2 @@
-qtpy
+qt.py
 pyside6
