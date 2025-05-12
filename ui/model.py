@@ -70,12 +70,12 @@ class ListModel(qtc.QAbstractListModel):
 
     def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
         if not index.isValid():
-            return False
+            return None
 
         if role == self.DataRole:
             return self.__items[index.column()].data
 
-        return super().data(index, role)
+        return None
 
     def insertRow(self, row: int,
                   parent: qtc.QModelIndex | None = None,
@@ -245,7 +245,7 @@ class TableModel(qtc.QAbstractTableModel):
         if role == self.DataRole:
             return item.data
 
-        return super().data(index, role)
+        return None
 
     def iter_indices(self) -> Iterator[qtc.QModelIndex]:
         row = -1
@@ -489,7 +489,7 @@ class ListTreeModel(qtc.QAbstractItemModel):
         if role == self.DataRole:
             return item.data
 
-        return super().data(index, role)
+        return None
 
     def iter_indices(self) -> Iterator[qtc.QModelIndex]:
         for i in range(self.rowCount()):
@@ -758,12 +758,14 @@ class TreeModel(qtc.QAbstractItemModel):
 
     def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
         if not index.isValid():
-            return False
+            return None
+
+        item = index.internalPointer()
 
         if role == self.DataRole:
-            return self.__items[index.column()].data
+            return item.data
 
-        return super().data(index, role)
+        return None
 
     def iter_indices(self, parent: qtc.QModelIndex | None = None,
                      recursive: bool = False) \
