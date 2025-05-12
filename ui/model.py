@@ -1,9 +1,10 @@
 """Custom model ready to use custom items."""
 
 from __future__ import annotations
+from collections.abc import Iterator
+from typing import Any
 
 import math
-from collections.abc import Iterator
 
 import Qt.QtCore as qtc
 
@@ -12,6 +13,8 @@ from item import Item, TreeItem
 
 class ListModel(qtc.QAbstractListModel):
     """List Model without columns."""
+
+    DataRole = qtc.Qt.UserRole + 1
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,6 +67,15 @@ class ListModel(qtc.QAbstractListModel):
 
     def rowCount(self, _: qtc.QModelIndex | None = None) -> int:
         return len(self.__items)
+
+    def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
+        if not index.isValid():
+            return False
+
+        if role == self.DataRole:
+            return self.__items[index.column()].data
+
+        return super().data(index, role)
 
     def insertRow(self, row: int,
                   parent: qtc.QModelIndex | None = None,
@@ -168,6 +180,8 @@ class ListModel(qtc.QAbstractListModel):
 
 class TableModel(qtc.QAbstractTableModel):
 
+    DataRole = qtc.Qt.UserRole + 1
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__items = []
@@ -209,7 +223,7 @@ class TableModel(qtc.QAbstractTableModel):
         self.endResetModel()
 
     def index(
-        self, row: int = 0, column: int = 0, parent: qtc.QModelIndex | None = None
+        self, row: int = 0, column: int = 0, parent: qtc.QModelIndex | None = None,
     ) -> qtc.QModelIndex:
         pos = self.columnCount() * row + column
 
@@ -221,6 +235,17 @@ class TableModel(qtc.QAbstractTableModel):
             return self.createIndex(row, column, self.__items[pos])
 
         return qtc.QModelIndex()
+
+    def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
+        if not index.isValid():
+            return None
+
+        item = index.internalPointer()
+
+        if role == self.DataRole:
+            return item.data
+
+        return super().data(index, role)
 
     def iter_indices(self) -> Iterator[qtc.QModelIndex]:
         row = -1
@@ -411,6 +436,7 @@ class ListTreeModel(qtc.QAbstractItemModel):
     """List on Tree Model with columns."""
 
     HEADERS_NAME: tuple[str] = ("Name",)
+    DataRole = qtc.Qt.UserRole + 1
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -452,6 +478,18 @@ class ListTreeModel(qtc.QAbstractItemModel):
               parent: qtc.QModelIndex | None = None) -> qtc.QModelIndex:
         if 0 <= row <= self.rowCount():
             return self.createIndex(row, column, self.__items[row])
+
+    def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
+
+        if not index.isValid():
+            return None
+
+        item = index.internalPointer()
+
+        if role == self.DataRole:
+            return item.data
+
+        return super().data(index, role)
 
     def iter_indices(self) -> Iterator[qtc.QModelIndex]:
         for i in range(self.rowCount()):
@@ -576,6 +614,7 @@ class TreeModel(qtc.QAbstractItemModel):
     """Tree Model."""
 
     HEADERS_NAME: tuple[str] = ("Name",)
+    DataRole = qtc.Qt.UserRole + 1
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -716,6 +755,15 @@ class TreeModel(qtc.QAbstractItemModel):
             return qtc.QModelIndex()
 
         return self.createIndex(parent_item.row(), 0, parent_item)
+
+    def data(self, index: qtc.QModelIndex, role: qtc.Qt.ItemDataRole) -> Any:
+        if not index.isValid():
+            return False
+
+        if role == self.DataRole:
+            return self.__items[index.column()].data
+
+        return super().data(index, role)
 
     def iter_indices(self, parent: qtc.QModelIndex | None = None,
                      recursive: bool = False) \
